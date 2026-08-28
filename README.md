@@ -16,12 +16,11 @@ The project contains multiple levels stored as JSON maps, a playable game client
 
 ## 🎮 Controls
 
-| Key           | Action       |
-|---------------| ------------ |
-| `←`           | Move left    |
-| `→`           | Move right   |
-| `Space` / `↑` | Jump         |
-| `Esc`         | Exit / pause |
+| Key          | Action     |
+|--------------|------------|
+| `←`          | Move left  |
+| `→`          | Move right |
+| `Space` / `↑`| Jump       |
 
 ## 📥 Installation
 
