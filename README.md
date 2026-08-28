@@ -4,10 +4,6 @@ A 2D platformer game built with **Python** and **pygame-ce**.
 
 The project contains multiple levels stored as JSON maps, a playable game client, and a utility for visualizing level layouts.
 
-## 📸 Screenshot
-
-![Platformer Screenshot](Icon/screenshot.png)
-
 ## ✨ Features
 
 * 🕹️ 2D platformer gameplay
