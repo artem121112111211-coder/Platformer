@@ -14,7 +14,7 @@ tile_size = 35
 
 clock = pygame.time.Clock()
 
-bg_music = pygame.mixer.Sound('Music/bg.mp3')
+bg_music = pygame.mixer.Sound('Music/bgmusic.mp3')
 death_music = pygame.mixer.Sound('Music/death.mp3')
 coin_music = pygame.mixer.Sound('Music/coin.mp3')
 jump_music = pygame.mixer.Sound('Music/jump.mp3')
