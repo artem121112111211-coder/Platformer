@@ -1,6 +1,10 @@
+import time
+
 import pygame
 import json
 pygame.init()
+
+debug_mode = False
 
 width = 700
 height = 700
@@ -10,7 +14,16 @@ tile_size = 35
 clock = pygame.time.Clock()
 fps = 60
 
+bg_music = pygame.mixer.Sound('Music/bg.mp3')
+death_music = pygame.mixer.Sound('Music/death.mp3')
+coin_music = pygame.mixer.Sound('Music/coin.mp3')
+jump_music = pygame.mixer.Sound('Music/jump.mp3')
+
 game_over = 0
+def_hp = 5
+hp = def_hp
+coins = 0
+level_coins = 0
 
 display = pygame.display.set_mode((width, height))
 pygame.display.set_caption('Platformer')
@@ -25,14 +38,23 @@ level_num = 1
 max_level = 4
 
 def reset_level():
+    global level_coins
     player.rect.x = 100
     player.rect.y = height - 130
     lava_group.empty()
     exit_group.empty()
+    coin_group.empty()
+    if debug_mode:
+        print(f"C: {coins}, LC: {level_coins}")
+    level_coins = 0
     with open(f'Levels/level{level_num}.json', 'r') as file:
         world_data = json.load(file)
     world = World(world_data)
     return world
+def draw_text(text, color, size, x, y):
+    font = pygame.font.Font("Fonts/PixelFont.ttf", size)
+    img = font.render(text, True, color)
+    display.blit(img, (x, y))
 
 class Player:
     def __init__(self):
@@ -65,6 +87,7 @@ class Player:
         if game_over == 0:
             key = pygame.key.get_pressed()
             if (key[pygame.K_SPACE] or key[pygame.K_UP]) and self.jumped == False:
+                jump_music.play()
                 self.gravity = -15
                 self.jumped = True
 
@@ -113,7 +136,10 @@ class Player:
             if self.rect.bottom > height:
                 self.rect.bottom = height
 
-            if pygame.sprite.spritecollide(self, lava_group, False):
+            lava_indicator = pygame.sprite.spritecollide(self, lava_group, False)
+
+            if lava_indicator:
+                death_music.play()
                 game_over = -1
             if pygame.sprite.spritecollide(self, exit_group, False):
                 game_over = 1
@@ -148,6 +174,9 @@ class World:
                 elif tile == 5:
                     exit = Exit(col_count * tile_size, row_count * tile_size - (tile_size // 2))
                     exit_group.add(exit)
+                elif tile == 6:
+                    coin = Coin(col_count * tile_size + (tile_size // 2), row_count * tile_size + (tile_size // 2))
+                    coin_group.add(coin)
                 col_count += 1
             row_count += 1
 
@@ -192,8 +221,18 @@ class Exit(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+class Coin(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        img = pygame.image.load('Icon/coin.png')
+        self.image = pygame.transform.scale(img, (tile_size//2, tile_size//2))
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+
 lava_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
+coin_group = pygame.sprite.Group()
 
 world = World(world_data)
 player = Player()
@@ -204,6 +243,7 @@ final_exit_button = Button(350, 650, "Icon/exit_btn.png")
 
 run = True
 main_menu = True
+bg_music.play(-1)
 while run:
     clock.tick(fps)
     display.blit(bg_image, bg_rect)
@@ -211,6 +251,8 @@ while run:
         if start_button.draw():
             main_menu = False
             level_num = 1
+            hp = def_hp
+            coins = 0
             world = reset_level()
         if exit_button.draw():
             run = False
@@ -219,15 +261,33 @@ while run:
         lava_group.draw(display)
         lava_group.update()
         exit_group.draw(display)
+        coin_group.draw(display)
+        draw_text(f"Coins:{str(coins + level_coins) }", (255, 255, 0), 30, 5,3)
+        draw_text(f"HP:{str(hp)}", (255, 0, 0), 30, 600, 3)
         player.update()
+        if pygame.sprite.spritecollide(player, coin_group, True):
+            if debug_mode:
+                print(f"C: {coins}, LC: {level_coins}")
+            level_coins += 1
+            coin_music.play()
 
         if game_over == -1:
             if restart_button.draw():
-                player = Player()
-                world = reset_level()
+                hp = hp - 1
+                if debug_mode:
+                    print(hp)
+                if hp == 0:
+                    main_menu = True
+                    time.sleep(0.1)
+                else:
+                    player = Player()
+                    world = reset_level()
                 game_over = 0
         if game_over == 1:
             game_over = 0
+            coins += level_coins
+            if debug_mode:
+                print(f"C: {str(coins) }")
             if level_num < max_level:
                 level_num += 1
                 world = reset_level()
