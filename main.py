@@ -1,8 +1,9 @@
-
 import time
-
 import pygame
 import json
+import io
+import sys
+import tempfile
 pygame.init()
 
 debug_mode = False
@@ -14,10 +15,16 @@ tile_size = 35
 
 clock = pygame.time.Clock()
 
-bg_music = pygame.mixer.Sound('Music/bgmusic.mp3')
-death_music = pygame.mixer.Sound('Music/death.mp3')
-coin_music = pygame.mixer.Sound('Music/coin.mp3')
-jump_music = pygame.mixer.Sound('Music/jump.mp3')
+def get_safe_path(relative_path):
+    frozen_dir = sys.modules['__main__'].__file__.rsplit('\\', 1)[0] if getattr(sys, 'frozen', False) else '.'
+    return f"{frozen_dir}\\{relative_path.replace('/', '\\')}"
+
+
+bg_music = pygame.mixer.Sound(get_safe_path('Music/bgmusic.mp3'))
+death_music = pygame.mixer.Sound(get_safe_path('Music/death.mp3'))
+coin_music = pygame.mixer.Sound(get_safe_path('Music/coin.mp3'))
+jump_music = pygame.mixer.Sound(get_safe_path('Music/jump.mp3'))
+
 
 game_over = 0
 def_hp = 5
@@ -28,10 +35,10 @@ level_coins = 0
 display = pygame.display.set_mode((width, height), vsync=1)
 pygame.display.set_caption('Platformer')
 
-bg_image = pygame.image.load('Icon/bg11.png')
+bg_image = pygame.image.load(get_safe_path('Icon/bg11.png'))
 bg_rect = bg_image.get_rect()
 
-with open('Levels/level1.json', 'r') as file:
+with open(get_safe_path('Levels/level1.json'), 'r') as file:
     world_data = json.load(file)
 
 level_num = 1
@@ -50,7 +57,7 @@ def reset_level():
     if debug_mode:
         print(f"C: {coins}, LC: {level_coins}")
     level_coins = 0
-    with open(f'Levels/level{level_num}.json', 'r') as file:
+    with open(get_safe_path(f'Levels/level{level_num}.json'), 'r') as file:
         world_data = json.load(file)
     world = World(world_data)
     return world
@@ -69,7 +76,7 @@ class Player:
         self.animation_interval = 10.0 / 60.0
 
         for num in range(1, 5):
-            img_right = pygame.image.load(f'Icon/player{num}.png')
+            img_right = pygame.image.load(get_safe_path(f'Icon/player{num}.png'))
             img_right = pygame.transform.scale(img_right, (35, 60))
             img_left = pygame.transform.flip(img_right, True, False)
             self.images_right.append(img_right)
@@ -207,8 +214,8 @@ class Player:
 class World:
     def __init__(self, data):
         self.tile_list = []
-        dirt_img = pygame.image.load('Icon/tile4.png')
-        grass_img = pygame.image.load('Icon/grass.png')
+        dirt_img = pygame.image.load(get_safe_path('Icon/tile4.png'))
+        grass_img = pygame.image.load(get_safe_path('Icon/grass.png'))
         row_count = 0
 
         for row in data:
@@ -260,7 +267,7 @@ class World:
 class Lava(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        img = pygame.image.load('Icon/lava.png')
+        img = pygame.image.load(get_safe_path('Icon/lava.png'))
         self.image = pygame.transform.scale(img, (tile_size, tile_size // 2))
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -268,7 +275,7 @@ class Lava(pygame.sprite.Sprite):
 
 class Button:
     def __init__(self, x, y, image, size=None):
-        img = pygame.image.load(image)
+        img = pygame.image.load(get_safe_path(image))
 
         if size:
             scale_factor = size[0] / img.get_width()
@@ -291,7 +298,7 @@ class Button:
 class Exit(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        img = pygame.image.load('Icon/door1.png')
+        img = pygame.image.load(get_safe_path('Icon/door1.png'))
         self.image = pygame.transform.scale(img, (tile_size, int(tile_size * 1.5)))
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -300,7 +307,7 @@ class Exit(pygame.sprite.Sprite):
 class Coin(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        img = pygame.image.load('Icon/coin.png')
+        img = pygame.image.load(get_safe_path('Icon/coin.png'))
         self.image = pygame.transform.scale(img, (tile_size // 2, tile_size // 2))
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
@@ -386,7 +393,7 @@ while run:
                 level_num += 1
                 world = reset_level()
             else:
-                img = pygame.image.load("Icon/win.jpg")
+                img = pygame.image.load(get_safe_path("Icon/win.jpg"))
                 image = pygame.transform.scale(img, (700, 700))
                 rect = image.get_rect()
                 display.blit(image, rect)
